@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МОС - Младежки Общински Съвет</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #007bff;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .row {
+            margin-bottom: 20px;
+        }
+
+        .row input, .row textarea, .row select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .row input:focus, .row textarea:focus, .row select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .row textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin: 0;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+
+        .add-button, .save-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .add-button:hover, .save-button:hover {
+            background-color: #0056b3;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-bar:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        /* Expandable/Collapsible Sections */
+        .expandable-section {
+            margin-bottom: 15px;
+        }
+
+        .expandable-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .expandable-header:hover {
+            background-color: #e0e0e0;
+        }
+
+        .expandable-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #007bff;
+        }
+
+        .expandable-content {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 5px;
+            display: none; /* Hidden by default */
+        }
+
+        .expandable-content.show {
+            display: block; /* Show when expanded */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .section {
+                padding: 15px;
+            }
+
+            .row input, .row textarea, .row select {
+                font-size: 0.8rem;
+            }
+
+            .add-button, .save-button {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>МОС - Младежки Общински Съвет</h1>
+
+    <!-- Search Bar for Members and Projects -->
+    <input type="text" id="search-bar" class="search-bar" placeholder="Търсете член или проект по име..." oninput="filterRows()">
+
+    <!-- Members Section -->
+    <div class="section">
+        <h2>Членове</h2>
+        <div id="members-container">
+            <!-- Member rows will be added here dynamically -->
+        </div>
+        <button class="add-button" onclick="addMember()">Добави Член</button>
+    </div>
+
+    <!-- Yearly Plan Section -->
+    <div class="section">
+        <h2>Годишен План</h2>
+        <textarea id="yearly-plan" placeholder="Въведете годишния план тук..."></textarea>
+    </div>
+
+    <!-- Active Projects Section -->
+    <div class="section">
+        <h2>Активни Проекти</h2>
+        <div id="projects-container">
+            <!-- Project rows will be added here dynamically -->
+        </div>
+        <button class="add-button" onclick="addProject()">Добави Проект</button>
+    </div>
+
+    <!-- Project Suggestions Section -->
+    <div class="section">
+        <h2>Предложения за Проекти</h2>
+        <div id="suggestions-container">
+            <!-- Suggestion rows will be added here dynamically -->
+        </div>
+        <button class="add-button" onclick="addSuggestion()">Добави Предложение</button>
+    </div>
+
+    <!-- Save Button -->
+    <button class="save-button" onclick="saveData()">Запази Данни</button>
+
+    <script>
+        // Load saved data when the page loads
+        document.addEventListener("DOMContentLoaded", loadData);
+
+        // Function to add a new member row
+        function addMember(memberData = {}) {
+            const membersContainer = document.getElementById("members-container");
+
+            const newMember = document.createElement("div");
+            newMember.className = "row member";
+            newMember.innerHTML = `
+                <input type="text" placeholder="Име" value="${memberData.name || ''}">
+                <input type="email" placeholder="Имейл" value="${memberData.email || ''}">
+                <input type="tel" placeholder="Телефон" value="${memberData.phone || ''}">
+                <input type="text" placeholder="Социални мрежи" value="${memberData.socials || ''}">
+                <div class="expandable-section">
+                    <div class="expandable-header" onclick="toggleExpandable(this)">
+                        <h3>Комисии</h3>
+                        <span>▼</span>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="checkbox-container">
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="sport" ${memberData.committees?.includes('sport') ? 'checked' : ''}> Спорт
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="media" ${memberData.committees?.includes('media') ? 'checked' : ''}> Медии
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="social-activities" ${memberData.committees?.includes('social-activities') ? 'checked' : ''}> Социални дейности
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="ecology" ${memberData.committees?.includes('ecology') ? 'checked' : ''}> Екология
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="culture" ${memberData.committees?.includes('culture') ? 'checked' : ''}> Култура
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="art" ${memberData.committees?.includes('art') ? 'checked' : ''}> Изкуство
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="expandable-section">
+                    <div class="expandable-header" onclick="toggleExpandable(this)">
+                        <h3>Проект</h3>
+                        <span>▼</span>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="checkbox-container">
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="project1" ${memberData.projects?.includes('project1') ? 'checked' : ''}> Проект 1
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="project2" ${memberData.projects?.includes('project2') ? 'checked' : ''}> Проект 2
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="project3" ${memberData.projects?.includes('project3') ? 'checked' : ''}> Проект 3
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="not-active" ${memberData.projects?.includes('not-active') ? 'checked' : ''}> Не участва в нито един проект
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            membersContainer.appendChild(newMember);
+        }
+
+        // Function to toggle expandable sections
+        function toggleExpandable(header) {
+            const content = header.nextElementSibling;
+            content.classList.toggle("show");
+        }
+
+        // Function to add a new project row
+        function addProject(projectData = {}) {
+            const projectsContainer = document.getElementById("projects-container");
+
+            const newProject = document.createElement("div");
+            newProject.className = "row project";
+            newProject.innerHTML = `
+                <input type="text" placeholder="Име на Проект" value="${projectData.name || ''}">
+                <textarea placeholder="Описание на Проекта">${projectData.description || ''}</textarea>
+            `;
+
+            projectsContainer.appendChild(newProject);
+        }
+
+        // Function to add a new suggestion row
+        function addSuggestion(suggestionData = {}) {
+            const suggestionsContainer = document.getElementById("suggestions-container");
+
+            const newSuggestion = document.createElement("div");
+            newSuggestion.className = "row suggestion";
+            newSuggestion.innerHTML = `
+                <textarea placeholder="Напишете вашето предложение тук...">${suggestionData.text || ''}</textarea>
+            `;
+
+            suggestionsContainer.appendChild(newSuggestion);
+        }
+
+        // Function to filter members and projects by name
+        function filterRows() {
+            const searchTerm = document.getElementById("search-bar").value.toLowerCase();
+            const members = document.querySelectorAll(".member");
+            const projects = document.querySelectorAll(".project");
+
+            members.forEach(member => {
+                const name = member.querySelector("input[type='text']").value.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    member.style.display = "block";
+                } else {
+                    member.style.display = "none";
+                }
+            });
+
+            projects.forEach(project => {
+                const name = project.querySelector("input[type='text']").value.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    project.style.display = "block";
+                } else {
+                    project.style.display = "none";
+                }
+            });
+        }
+
+        // Function to save data
+        function saveData() {
+            const data = {
+                members: [],
+                yearlyPlan: document.getElementById("yearly-plan").value,
+                projects: [],
+                suggestions: []
+            };
+
+            // Save members
+            document.querySelectorAll(".member").forEach(member => {
+                const committees = Array.from(member.querySelectorAll(".expandable-content:nth-child(5) input[type='checkbox']:checked")).map(checkbox => checkbox.value);
+                const projects = Array.from(member.querySelectorAll(".expandable-content:nth-child(7) input[type='checkbox']:checked")).map(checkbox => checkbox.value);
+                data.members.push({
+                    name: member.querySelector("input[type='text']").value,
+                    email: member.querySelector("input[type='email']").value,
+                    phone: member.querySelector("input[type='tel']").value,
+                    socials: member.querySelector("input[type='text'][placeholder='Социални мрежи']").value,
+                    committees: committees, // Save committees
+                    projects: projects
+                });
+            });
+
+            // Save projects
+            document.querySelectorAll(".project").forEach(project => {
+                data.projects.push({
+                    name: project.querySelector("input[type='text']").value,
+                    description: project.querySelector("textarea").value
+                });
+            });
+
+            // Save suggestions
+            document.querySelectorAll(".suggestion").forEach(suggestion => {
+                data.suggestions.push({
+                    text: suggestion.querySelector("textarea").value
+                });
+            });
+
+            // Save to local storage
+            localStorage.setItem("mosData", JSON.stringify(data));
+            alert("Данните са запазени в local storage!");
+
+            // Export as JSON file
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "mos_data.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Function to load saved data
+        function loadData() {
+            const savedData = localStorage.getItem("mosData");
+            if (savedData) {
+                const data = JSON.parse(savedData);
+
+                // Load yearly plan
+                document.getElementById("yearly-plan").value = data.yearlyPlan || "";
+
+                // Load members
+                data.members.forEach(member => addMember(member));
+
+                // Load projects
+                data.projects.forEach(project => addProject(project));
+
+                // Load suggestions
+                data.suggestions.forEach(suggestion => addSuggestion(suggestion));
+            }
+        }
+    </script>
+</body>
+</html>
